@@ -34,7 +34,7 @@ AI Content Generator — это веб-приложение, которое ис
 
    ```bash
 
-   git clone https://github.com/MukhammedaliZhursinbek/ai\_content\_creator.git
+   git clone https://github.com/MukhammedaliZhursinbek/ai_content_creator.git
 
    cd ai-content-generator
 
