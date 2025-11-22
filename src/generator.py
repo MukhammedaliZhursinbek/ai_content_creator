@@ -5,30 +5,33 @@ class TextGenerator:
     def __init__(self, api_key):
         openai.api_key = api_key  # Устанавливаем API-ключ
 
-    def generate_text(self, topic, style, length, language):
-        """Генерирует текст в зависимости от темы, стиля, длины и языка."""
-        # Настройка промпта в зависимости от выбранного языка
-        if language == "английский":
-            prompt_prefix = "Write a formal article about" if style == "формальный" else "Write an advertising copy about"
-            prompt = f"{prompt_prefix} {topic}."
+    def generate_text(self, topic, style, length):
+        """Генерирует текст в зависимости от темы, стиля и длины."""
+
+        # Формирование промпта без учета языка
+        if style == "формальный":
+            prompt = f"Напишите формальную статью на тему {topic}."
+        elif style == "рекламный":
+            prompt = f"Создайте рекламный текст о {topic}."
         else:
-            prompt_prefix = "Напишите формальную статью на тему" if style == "формальный" else "Создайте рекламный текст о"
-            prompt = f"{prompt_prefix} {topic}."
+            prompt = f"Напишите разговорный текст на тему {topic}."
 
         # Запрос к OpenAI API для генерации текста
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Используем модель GPT-3.5
+            model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant."},  # Система
-                {"role": "user", "content": prompt}  # Запрос пользователя
+                {"role": "system", "content": "Вы — помощник, который пишет текст строго на русском языке."},
+                {"role": "user", "content": prompt}
             ],
-            max_tokens=length * 2,  # Преобразуем количество слов в токены (1 слово ≈ 2 токена)
-            temperature=0.7,  # Температура генерации
-            top_p=1.0,  # Кумулятивная вероятность
-            frequency_penalty=0.0,  # Штраф за частоту
-            presence_penalty=0.0,  # Штраф за присутствие
+            max_tokens=length * 2,  # Примерное соответствие слов и токенов
+            temperature=0.7,
+            top_p=1.0,
+            frequency_penalty=0.0,
+            presence_penalty=0.0,
         )
 
-        # Получаем текст из ответа
+        # Извлечение текста
         text = response['choices'][0]['message']['content'].strip()
         return text
+
+
