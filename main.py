@@ -1,76 +1,80 @@
-# main.py
 import argparse
+import os
 from src.generator import TextGenerator
-from src.utils import validate_input, get_max_word_limit
-from src.config import load_api_key
+from src.utils import validate_input
+from dotenv import load_dotenv
+
+# Загружаем переменные из .env
+load_dotenv()
+
+MAX_WORDS = 500  # Устанавливаем максимальное количество слов
+
 
 def parse_args():
-    """Парсинг аргументов командной строки."""
     parser = argparse.ArgumentParser(description="Генератор контента с использованием ИИ")
     parser.add_argument('--topic', type=str, help="Тема для генерации контента")
     parser.add_argument('--style', type=str, choices=['рекламный', 'формальный', 'разговорный'], help="Стиль текста")
-    parser.add_argument('--length', type=int, help="Длина сгенерированного контента в словах")
-    parser.add_argument('--language', type=str, choices=['русский', 'английский'], help="Язык текста")
+    parser.add_argument('--length', type=int, help="Длина текста в словах")
     return parser.parse_args()
 
-def interactive_input():
-    """Интерактивный ввод для темы, стиля, длины текста и языка."""
-    print("Выберите вашу тему:")
-    topic = input("Тема (например, 'Как искусственный интеллект меняет маркетинг'): ")
 
-    print("Выберите ваш стиль:")
+def interactive_input():
+    print("Выберите вашу тему:")
+    topic = input("Тема: ")
+
+    print("Выберите стиль:")
     style = input("Стиль (рекламный, формальный, разговорный): ")
 
-    # Ввод количества слов с ограничением
     while True:
         try:
-            length = int(input(f"Количество слов (максимум {get_max_word_limit()}): "))
-            if length <= 0:
-                print("Количество слов должно быть положительным числом.")
-            elif length > get_max_word_limit():
-                print(f"Количество слов не может превышать {get_max_word_limit()}. Попробуйте снова.")
-            else:
+            length = int(input(f"Количество слов (до {MAX_WORDS}): "))
+            if 0 < length <= MAX_WORDS:
                 break
+            else:
+                print(f"Введите число от 1 до {MAX_WORDS}.")
         except ValueError:
-            print("Пожалуйста, введите целое число.")
+            print("Введите целое число.")
 
-    return topic, style, length, language
+    return topic, style, length
+
 
 def main():
-    """Основная функция, которая запускает генерацию контента."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("Не найден API-ключ. Установите OPENAI_API_KEY в .env.")
+
+    args = parse_args()
+
+    if not args.topic or not args.style or not args.length:
+        topic, style, length = interactive_input()
+    else:
+        topic = args.topic
+        style = args.style
+        length = args.length
+
     try:
-        # Загружаем API-ключ
-        api_key = load_api_key()
-
-        # Парсим аргументы командной строки
-        args = parse_args()
-
-        # Если аргументы не переданы, используем интерактивный ввод
-        if not args.topic or not args.style or not args.length or not args.language:
-            topic, style, length, language = interactive_input()
-        else:
-            topic = args.topic
-            style = args.style
-            length = args.length
-            language = args.language
-
-        # Валидация входных данных
         validate_input(topic, style, length)
 
-        # Инициализация генератора текста
+        # Просто формирование промпта без языка
+        if style == "формальный":
+            prompt_prefix = "Напишите формальную статью на тему"
+        elif style == "рекламный":
+            prompt_prefix = "Создайте рекламный текст о"
+        else:
+            prompt_prefix = "Напишите разговорный текст на тему"
+
+        prompt = f"{prompt_prefix} {topic}."
+
         generator = TextGenerator(api_key)
+        generated_text = generator.generate_text(topic, style, length)
 
-        # Генерация текста
-        generated_text = generator.generate_text(topic, style, length, language)
-
-        # Вывод сгенерированного текста
         print("\nСгенерированный текст:")
         print(generated_text)
-
-        print(f"\nЯзык текста: {language.capitalize()}")
 
     except ValueError as e:
         print(f"Ошибка: {e}")
 
+
 if __name__ == "__main__":
     main()
+
