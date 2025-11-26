@@ -36,7 +36,8 @@ AI Content Generator — это веб-приложение, которое ис
 
    git clone https://github.com/MukhammedaliZhursinbek/ai_content_creator.git
 
-   cd ai_content_generator
+   cd ai_content_creator
+  
 
 
 
